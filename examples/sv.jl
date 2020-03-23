@@ -1,7 +1,7 @@
 # This example requires that also the packages Distributions, LabelledArrays,
-# and CSV are installed; install by
-# using Pkg; Pkg.add("CSV"); Pkg.add("Distributions"); Pkg.add("LabelledArrays")
-using AdaptiveParticleMCMC, SequentialMonteCarlo, LabelledArrays, Distributions, CSV
+# CSV and Statistics are installed; install by
+# using Pkg; Pkg.add("CSV"); Pkg.add("Distributions"); Pkg.add("LabelledArrays"); Pkg.add("Statistics")
+using AdaptiveParticleMCMC, LabelledArrays, Distributions, CSV, Statistics
 
 # Define the particle type for the model (here, latent is univariate AR(1))
 mutable struct SVParticle
@@ -84,8 +84,8 @@ T = length(sp500_data)
 N = 64     # Number of particles
 n = 40_000 # Number of PMCMC iterations
 
-model = SMCModel(M_ar1!, lG_sv, T, SVParticle, SVScratch)
-io = SMCIO{SVParticle,SVScratch}(N, T, 1, true)
+model = AdaptiveParticleMCMC.SMCModel(M_ar1!, lG_sv, T, SVParticle, SVScratch)
+io = AdaptiveParticleMCMC.SMCIO{SVParticle,SVScratch}(N, T, 1, true)
 # If you have a large N or complicated (costly) model, parallelisation may help:
 #io = SMCIO{SVParticle,SVScratch}(N, T, Threads.nthreads(), true)
 
@@ -111,7 +111,6 @@ function show_out(out; title="")
     labels = [string.(typeof(out.theta0).parameters[4])...]
     p_theta = corrplot(out.Theta', size=(600,600), label=labels,
     title="Parameter posterior$title")
-
     # The volatilities:
     S = [out.X[j][i].s+out.Theta[3,j] for i=1:io.n, j=1:length(out.X)]
     p_paths = plot(xlabel="Time", size=(600,800), ylabel="Log-volatility",

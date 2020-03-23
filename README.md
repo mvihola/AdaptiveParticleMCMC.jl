@@ -23,7 +23,7 @@ Pkg.add(PackageSpec(url="https://github.com/mvihola/AdaptiveParticleMCMC.jl.git"
 ## Quick start
 
 ```julia
-using AdaptiveParticleMCMC, SequentialMonteCarlo
+using AdaptiveParticleMCMC
 # 'Particle' and 'ParticleScratch' data types for SequentialMonteCarlo0
 mutable struct MyParticle
     s::Float64
@@ -42,9 +42,9 @@ test_prior(theta) = 1
 set_param!(par, theta) = (par.μ = theta[1]; nothing)
 # Test run: N particles, n iterations, time series length T
 N=16; T=10; n=10000
-# SequentialMonteCarlo data types
-test_model = SMCModel(M!, lG, T, MyParticle, MyParam)
-test_io = SMCIO{MyParticle,MyParam}(N, T, 1, true)
+# SequentialMonteCarlo data structures
+test_model = AdaptiveParticleMCMC.SMCModel(M!, lG, T, MyParticle, MyParam)
+test_io = AdaptiveParticleMCMC.SMCIO{MyParticle,MyParam}(N, T, 1, true)
 # Run the algorithms
 out_pmmh = pmmh_am([0.0], test_prior, set_param!, test_model, test_io, n)
 out_pg = pg_ram([0.0], test_prior, set_param!, test_model, test_io, lM, n)
@@ -55,8 +55,8 @@ out_pg = pg_ram([0.0], test_prior, set_param!, test_model, test_io, lM, n)
 ```julia
 # This example requires that also the packages Distributions, LabelledArrays,
 # and CSV are installed; install by
-# using Pkg; Pkg.add("CSV"); Pkg.add("Distributions"); Pkg.add("LabelledArrays")
-using AdaptiveParticleMCMC, SequentialMonteCarlo, LabelledArrays, Distributions, CSV
+# using Pkg; Pkg.add("Statistics"); Pkg.add("CSV"); Pkg.add("Distributions"); Pkg.add("LabelledArrays")
+using AdaptiveParticleMCMC, Statistics, LabelledArrays, Distributions, CSV
 
 # Define the particle type for the model (here, latent is univariate AR(1))
 mutable struct SVParticle
@@ -73,7 +73,7 @@ mutable struct SVParam
 end
 
 # Monthly S&P 500 data (from https://datahub.io/core/s-and-p-500):
-data = CSV.read(download("https://github.com/mvihola/AdaptiveMCMC.jl/tree/master/examples/sp500post2000.csv"))
+data = CSV.read(download("https://raw.githubusercontent.com/mvihola/AdaptiveParticleMCMC.jl/master/examples/sp500post2000.csv"))
 sp500_data = diff(log.(data.SP500)) # Monthly log-returns
 sp500_data .-= mean(sp500_data)     # Remove trend
 # Initialise parameters
@@ -138,8 +138,9 @@ T = length(sp500_data)
 N = 64     # Number of particles
 n = 40_000 # Number of PMCMC iterations
 
-model = SMCModel(M_ar1!, lG_sv, T, SVParticle, SVScratch)
-io = SMCIO{SVParticle,SVScratch}(N, T, 1, true)
+# SequentialMonteCarlo data structures:
+model = AdaptiveParticleMCMC.SMCModel(M_ar1!, lG_sv, T, SVParticle, SVScratch)
+io = AdaptiveParticleMCMC.SMCIO{SVParticle,SVScratch}(N, T, 1, true)
 
 # Initial (transformed) parameter vector
 theta0 = LVector(logit_̢rho=0.0, log_sigma=0.0, beta=0.0)
@@ -151,7 +152,9 @@ thin=100, show_progress=2, save_paths=true);
 out_pg = pg_ram(theta0, prior, set_param!, model, io, lM_ar1, n;
 thin=100, show_progress=2, save_paths=true);
 
-using StatsPlots, Statistics
+# The visualisation requires "StatsPlots" package; install by
+# using Pkg; Pkg.add("StatsPlots")
+using StatsPlots
 function quantile_plot!(plt, S, p=0.95; x=1:size(S)[1])
     alpha = (1-p)/2
     qs = [alpha, 0.5, 1-alpha]
@@ -163,7 +166,6 @@ function show_out(out; title="")
     labels = [string.(typeof(out.theta0).parameters[4])...]
     p_theta = corrplot(out.Theta', size=(600,600), label=labels,
     title="Parameter posterior$title")
-
     # The volatilities:
     S = [out.X[j][i].s+out.Theta[3,j] for i=1:io.n, j=1:length(out.X)]
     p_paths = plot(xlabel="Time", size=(600,800), ylabel="Log-volatility",
