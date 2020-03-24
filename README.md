@@ -137,7 +137,7 @@ N = 64     # Number of particles
 n = 40_000 # Number of PMCMC iterations
 
 # Set up SMC state:
-state = SMCState(T, N, SVParticle, SVParam, set_param!, lG_sv, M_ar1!, lM_ar1)
+state = SMCState(T, N, SVParticle, SVScratch, set_param!, lG_sv, M_ar1!, lM_ar1)
 
 # Initial (transformed) parameter vector
 theta0 = LVector(logit_̢rho=0.0, log_sigma=0.0, beta=0.0)
