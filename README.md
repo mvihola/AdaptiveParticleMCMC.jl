@@ -1,11 +1,15 @@
 # AdaptiveParticleMCMC.jl
 
-Simple implementation of adaptive proposals within particle Markov chain Monte Carlo [(Andrieu, Doucet and Holenstein)](https://doi.org/10.1111/j.1467-9868.2009.00736.x), based on the [AdaptiveMCMC.jl](https://github.com/mvihola/AdaptiveMCMC.jl) and [SequentialMonteCarlo.jl](https://github.com/awllee/SequentialMonteCarlo.jl) packages.
+Simple implementation of adaptive proposals within particle Markov chain Monte Carlo [(Andrieu, Doucet and Holenstein, 2010)](https://doi.org/10.1111/j.1467-9868.2009.00736.x), based on the [AdaptiveMCMC.jl](https://github.com/mvihola/AdaptiveMCMC.jl) and [SequentialMonteCarlo.jl](https://github.com/awllee/SequentialMonteCarlo.jl) packages.
 
 The package implemnents the following combinations:
 
-* Adaptive Metropolis covariance adaptation ([Haario, Saksman and Tamminen, 2001](https://projecteuclid.org/euclid.bj/1080222083), and [Andrieu and Moulines, 2006](http://dx.doi.org/10.1214/105051606000000286)) with Particle marginal Metropolis-Hastings sampler
-* Robust adaptive Metropolis acceptance rate based shape adaptation [(Vihola, 2012)](http://dx.doi.org/10.1007/s11222-011-9269-5) with Particle Gibbs.
+* Particle marginal Metropolis-Hastings with
+Adaptive Metropolis covariance adaptation ([Haario, Saksman and Tamminen, 2001](https://projecteuclid.org/euclid.bj/1080222083), and [Andrieu and Moulines, 2006](http://dx.doi.org/10.1214/105051606000000286))
+* Particle Gibbs with Robust adaptive Metropolis acceptance rate based
+shape adaptation [(Vihola, 2012)](http://dx.doi.org/10.1007/s11222-011-9269-5) and
+Adaptive scaling within Adaptive Metropolis [(e.g. Andrieu and Thoms,
+2008)](https://doi.org/10.1007/s11222-008-9110-y)
 
 These choices are discussed in
 * Vihola, M. (to appear). Ergonomic and reliable Bayesian inference with adaptive Markov chain Monte Carlo. In *Handbook of Computational Statistics and Data Science*, Wiley.
