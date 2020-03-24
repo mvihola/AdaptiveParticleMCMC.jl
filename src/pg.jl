@@ -11,17 +11,14 @@
 end
 
 """
-   out = adaptive_pg(theta0, prior, set!, model, io, lM, n; kwargs...)
+   out = adaptive_pg(theta0, prior, state, n; kwargs...)
 
 Particle Gibbs (PG) with adaptive proposal on the parameters.
 
 # Arguments
 - `theta0`: Initial parameter vector
 - `prior`: Function returning prior log density values for parameters
-- `set_param!`: Function which updates the parameter value of the model
-- `model`: `SequentialMonteCarlo.SMCModel` data structure
-- `io`:  `SequentialMonteCarlo.SMCIO` data structure
-- `lM`: Function returning log-density values of the transition probability
+- `state`: `SMCState` data structure
 - `n`: Number of iterations
 
 # Optional keyword arguments
@@ -44,10 +41,15 @@ values (each column is a parameter vector). If requested (by `save_paths=true`),
  at time `k`.
 """
 function adaptive_pg(theta0::ParamT, prior::Function,
-    set_param!::Function, model::SMCModel, io::SMCIO, lM::Function, n::Int;
-    b::Int=Int(ceil(0.1n)), thin::Int=1, save_paths::Bool=false,
-    acc_opt::FT=FT(0.234), backward_sampling::Bool=true,
+    state::SMCState, n::Int; b::Int=Int(ceil(0.1n)), thin::Int=1,
+    save_paths::Bool=false, acc_opt::FT=FT(0.234), backward_sampling::Bool=true,
     show_progress::Real=false, algorithm=:ram) where {FT <: AbstractFloat, ParamT<:AbstractVector{FT}}
+
+    if isnothing(state.lM)
+        error("SMC state `state` must supply log-transition density!")
+    end
+    io = state.io; model = state.model; lM = state.lM
+    set_param! = state.set_param!
 
     ref = [model.particle() for i=1:io.n]
     # Run the particle filter for HMM w/ param theta0:

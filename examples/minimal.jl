@@ -18,9 +18,8 @@ set_param!(par, theta) = (par.μ = theta[1]; nothing)
 # Test run: N particles, n iterations, time series length T
 N=16; T=10; n=10000
 # SequentialMonteCarlo data types
-test_model = AdaptiveParticleMCMC.SMCModel(M!, lG, T, MyParticle, MyParam)
-test_io = AdaptiveParticleMCMC.SMCIO{MyParticle,MyParam}(N, T, 1, true)
+state = SMCState(T, N, MyParticle, MyParam, set_param!, lG, M!, lM)
 # Run the algorithms
-out_pmmh = adaptive_pmmh([0.0], test_prior, set_param!, test_model, test_io, n)
-out_pg = adaptive_pg([0.0], test_prior, set_param!, test_model, test_io, lM, n)
-out_pg_aswam = adaptive_pg([0.0], test_prior, set_param!, test_model, test_io, lM, n; algorithm=:aswam)
+out_pmmh = adaptive_pmmh([0.0], test_prior, state, n)
+out_pg = adaptive_pg([0.0], test_prior, state, n)
+out_pg_aswam = adaptive_pg([0.0], test_prior, state, n; algorithm=:aswam)

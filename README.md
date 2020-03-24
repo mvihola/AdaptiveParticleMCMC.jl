@@ -42,11 +42,10 @@ set_param!(par, theta) = (par.μ = theta[1]; nothing)
 # Test run: N particles, n iterations, time series length T
 N=16; T=10; n=10000
 # SequentialMonteCarlo data structures
-test_model = AdaptiveParticleMCMC.SMCModel(M!, lG, T, MyParticle, MyParam)
-test_io = AdaptiveParticleMCMC.SMCIO{MyParticle,MyParam}(N, T, 1, true)
+state = SMCState(T, N, MyParticle, MyParam, set_param!, lG, M!, lM)
 # Run the algorithms
-out_pmmh = adaptive_pmmh([0.0], test_prior, set_param!, test_model, test_io, n)
-out_pg = adaptive_pg([0.0], test_prior, set_param!, test_model, test_io, lM, n)
+out_pmmh = adaptive_pmmh([0.0], test_prior, state, n)
+out_pg = adaptive_pg([0.0], test_prior, state, n)
 ```
 
 ## Simple stochastic volatility model
@@ -137,19 +136,18 @@ T = length(sp500_data)
 N = 64     # Number of particles
 n = 40_000 # Number of PMCMC iterations
 
-# SequentialMonteCarlo data structures:
-model = AdaptiveParticleMCMC.SMCModel(M_ar1!, lG_sv, T, SVParticle, SVScratch)
-io = AdaptiveParticleMCMC.SMCIO{SVParticle,SVScratch}(N, T, 1, true)
+# Set up SMC state:
+state = SMCState(T, N, SVParticle, SVParam, set_param!, lG_sv, M_ar1!, lM_ar1)
 
 # Initial (transformed) parameter vector
 theta0 = LVector(logit_̢rho=0.0, log_sigma=0.0, beta=0.0)
 # Particle marginal Metropolis-Hastings with Adaptive Metropolis
-out_pmmh = adaptive_pmmh(theta0, prior, set_param!, model, io, n;
-thin=100, show_progress=2, save_paths=true);
+out_pmmh = adaptive_pmmh(theta0, prior, state, n;
+  thin=100, show_progress=2, save_paths=true);
 
 # Particle Gibbs with Robust Adaptive Metropolis
-out_pg = adaptive_pg(theta0, prior, set_param!, model, io, lM_ar1, n;
-thin=100, show_progress=2, save_paths=true);
+out_pg = adaptive_pg(theta0, prior, state, n;
+  thin=100, show_progress=2, save_paths=true);
 
 # The visualisation requires "StatsPlots" package; install by
 # using Pkg; Pkg.add("StatsPlots")
@@ -166,7 +164,7 @@ function show_out(out; title="")
     p_theta = corrplot(out.Theta', size=(600,600), label=labels,
     title="Parameter posterior$title")
     # The volatilities:
-    S = [out.X[j][i].s+out.Theta[3,j] for i=1:io.n, j=1:length(out.X)]
+    S = [out.X[j][i].s+out.Theta[3,j] for i=1:length(out.X), j=1:length(out.X)]
     p_paths = plot(xlabel="Time", size=(600,800), ylabel="Log-volatility",
     legend=false, title="Latent posterior median, 50% and 95% credible intervals")
     quantile_plot!(p_paths, S, 0.95; x=data.Date[2:end])

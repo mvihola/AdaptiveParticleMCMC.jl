@@ -1,5 +1,5 @@
 """
-   out = adaptive_pmmh(theta0, prior, set!, model, io, n; kwargs...)
+   out = adaptive_pmmh(theta0, prior, state, n; kwargs...)
 
 Generic particle marginal Metropolis-Hastings (PMMH) with adaptive
 Metropolis proposal on the parameters.
@@ -7,9 +7,7 @@ Metropolis proposal on the parameters.
 # Arguments
 - `theta0`: Initial parameter vector
 - `prior`: Function returning prior log density values for parameters
-- `set_param!`: Function which updates the parameter value of the model
-- `model`: `SequentialMonteCarlo.SMCModel` data structure
-- `io`:  `SequentialMonteCarlo.SMCIO` data structure
+- `state`: `SMCState` data structure.
 - `n`: Number of iterations
 
 # Optional keyword arguments
@@ -28,10 +26,11 @@ values (each column is a parameter vector). If requested (by `save_paths=true`),
 `out.X[i][k]` contains the simulated state corresponding to `out.Theta[:,i]`
 at time `k`.
 """
-function adaptive_pmmh(theta0::ParamT, prior::Function,
-    set_param!::Function, model::SMCModel, io::SMCIO, n::Int;
+function adaptive_pmmh(theta0::ParamT, prior::Function, state::SMCState, n::Int;
     b::Int=Int(ceil(0.1n)), thin::Int=1, save_paths::Bool=false,
     show_progress::Real=false) where {FT<:AbstractFloat, ParamT<:AbstractVector{FT}}
+
+    io = state.io; model = state.model; set_param! = state.set_param!
 
     # Run the particle filter for HMM w/ param theta0:
     set_param!(io.internal.particleScratch, theta0); smc!(model, io)

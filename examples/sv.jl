@@ -84,20 +84,18 @@ T = length(sp500_data)
 N = 64     # Number of particles
 n = 40_000 # Number of PMCMC iterations
 
-model = AdaptiveParticleMCMC.SMCModel(M_ar1!, lG_sv, T, SVParticle, SVScratch)
-io = AdaptiveParticleMCMC.SMCIO{SVParticle,SVScratch}(N, T, 1, true)
-# If you have a large N or complicated (costly) model, parallelisation may help:
-#io = SMCIO{SVParticle,SVScratch}(N, T, Threads.nthreads(), true)
+# Set up the SMC state
+state = SMCState(T, N, SVParticle, SVScratch, set_param!, lG_sv, M_ar1!, lM_ar1)
 
 # Initial (transformed) parameter vector
 theta0 = LVector(logit_̢rho=0.0, log_sigma=0.0, beta=0.0)
 # Particle marginal Metropolis-Hastings with Adaptive Metropolis
-out_pmmh = adaptive_pmmh(theta0, prior, set_param!, model, io, n;
-thin=100, show_progress=2, save_paths=true);
+out_pmmh = adaptive_pmmh(theta0, prior, state, n;
+  thin=100, show_progress=2, save_paths=true);
 
 # Particle Gibbs with Robust Adaptive Metropolis
-out_pg = adaptive_pg(theta0, prior, set_param!, model, io, lM_ar1, n;
-thin=100, show_progress=2, save_paths=true);
+out_pg = adaptive_pg(theta0, prior, state, n;
+  thin=100, show_progress=2, save_paths=true);
 
 using StatsPlots, Statistics
 function quantile_plot!(plt, S, p=0.95; x=1:size(S)[1])
@@ -112,7 +110,7 @@ function show_out(out; title="")
     p_theta = corrplot(out.Theta', size=(600,600), label=labels,
     title="Parameter posterior$title")
     # The volatilities:
-    S = [out.X[j][i].s+out.Theta[3,j] for i=1:io.n, j=1:length(out.X)]
+    S = [out.X[j][i].s+out.Theta[3,j] for i=1:length(out.X[1]), j=1:length(out.X)]
     p_paths = plot(xlabel="Time", size=(600,800), ylabel="Log-volatility",
     legend=false, title="Latent posterior median, 50% and 95% credible intervals")
     quantile_plot!(p_paths, S, 0.95; x=data.Date[2:end])

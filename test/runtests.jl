@@ -30,12 +30,9 @@ function set_param!(scratch, theta_) scratch.θ.σ = exp(theta_[1]); nothing end
 test_parameters = TestParam()
 TestScratch() = TestScratch(test_parameters)
 N=16; T=10; n=10000
-test_model = SMCModel(M!, lG, T, TestParticle, TestScratch)
-test_io = SMCIO{TestParticle,TestScratch}(N, T, 1, true)
-update!(theta_) = set_param!(test_parameters, theta_)
-theta0 = zeros(1)
-out_pmmh = adaptive_pmmh(theta0, test_prior, set_param!, test_model, test_io, n; save_paths=true);
-out_pg = adaptive_pg(theta0, test_prior, set_param!, test_model, test_io, lM, n; save_paths=true);
+test_state = SMCState(T, N, TestParticle, TestScratch, set_param!, lG, M!, lM)
+out_pmmh = adaptive_pmmh([0.0], test_prior, test_state, n; save_paths=true);
+out_pg = adaptive_pg([0.0], test_prior, test_state, n; save_paths=true);
 function test_stats(out)
     X_ = [out.X[i][j].s for i=1:length(out.X), j=1:T]
     mX = mapslices(mean, X_, dims=1)
