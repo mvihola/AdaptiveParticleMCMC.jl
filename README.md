@@ -12,7 +12,7 @@ Adaptive scaling within Adaptive Metropolis [(e.g. Andrieu and Thoms,
 2008)](https://doi.org/10.1007/s11222-008-9110-y)
 
 These choices are discussed in
-* Vihola, M. (to appear). Ergonomic and reliable Bayesian inference with adaptive Markov chain Monte Carlo. In *Handbook of Computational Statistics and Data Science*, Wiley.
+* M. Vihola. Ergonomic and reliable Bayesian inference with adaptive Markov chain Monte Carlo. In W. W. Piegrorsch, R. Levine,  H. H. Zhang, and T. C. M. Lee, editors, *Handbook of Computational Statistics and Data Science*, Wiley, to appear.
 
 If you use this package in your work, please cite the publication above.
 
