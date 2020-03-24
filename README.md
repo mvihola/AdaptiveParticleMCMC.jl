@@ -16,7 +16,6 @@ If you use this package in your work, please cite the publication above.
 
 ```julia
 using Pkg
-Pkg.add(PackageSpec(url="https://github.com/mvihola/AdaptiveMCMC.jl.git"))
 Pkg.add(PackageSpec(url="https://github.com/mvihola/AdaptiveParticleMCMC.jl.git"))
 ```
 
