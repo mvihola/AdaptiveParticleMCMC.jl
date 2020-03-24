@@ -92,11 +92,11 @@ io = AdaptiveParticleMCMC.SMCIO{SVParticle,SVScratch}(N, T, 1, true)
 # Initial (transformed) parameter vector
 theta0 = LVector(logit_̢rho=0.0, log_sigma=0.0, beta=0.0)
 # Particle marginal Metropolis-Hastings with Adaptive Metropolis
-out_pmmh = pmmh_am(theta0, prior, set_param!, model, io, n;
+out_pmmh = adaptive_pmmh(theta0, prior, set_param!, model, io, n;
 thin=100, show_progress=2, save_paths=true);
 
 # Particle Gibbs with Robust Adaptive Metropolis
-out_pg = pg_ram(theta0, prior, set_param!, model, io, lM_ar1, n;
+out_pg = adaptive_pg(theta0, prior, set_param!, model, io, lM_ar1, n;
 thin=100, show_progress=2, save_paths=true);
 
 using StatsPlots, Statistics

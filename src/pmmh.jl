@@ -1,5 +1,5 @@
 """
-   out = pmmh_am(theta0, prior, set!, model, io, n; kwargs...)
+   out = adaptive_pmmh(theta0, prior, set!, model, io, n; kwargs...)
 
 Generic particle marginal Metropolis-Hastings (PMMH) with adaptive
 Metropolis proposal on the parameters.
@@ -28,7 +28,7 @@ values (each column is a parameter vector). If requested (by `save_paths=true`),
 `out.X[i][k]` contains the simulated state corresponding to `out.Theta[:,i]`
 at time `k`.
 """
-function pmmh_am(theta0::ParamT, prior::Function,
+function adaptive_pmmh(theta0::ParamT, prior::Function,
     set_param!::Function, model::SMCModel, io::SMCIO, n::Int;
     b::Int=Int(ceil(0.1n)), thin::Int=1, save_paths::Bool=false,
     show_progress::Real=false) where {FT<:AbstractFloat, ParamT<:AbstractVector{FT}}

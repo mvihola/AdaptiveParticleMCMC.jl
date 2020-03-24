@@ -1,7 +1,7 @@
 # Very simple implementation of some adaptive MCMC algorithms.
 module AdaptiveParticleMCMC
 
-export pg_ram, pmmh_am
+export adaptive_pg, adaptive_pmmh
 
 using Random, SequentialMonteCarlo, ProgressMeter, AdaptiveMCMC
 

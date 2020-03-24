@@ -21,5 +21,6 @@ N=16; T=10; n=10000
 test_model = AdaptiveParticleMCMC.SMCModel(M!, lG, T, MyParticle, MyParam)
 test_io = AdaptiveParticleMCMC.SMCIO{MyParticle,MyParam}(N, T, 1, true)
 # Run the algorithms
-out_pmmh = pmmh_am([0.0]), test_prior, set_param!, test_model, test_io, n)
-out_pg = pg_ram([0.0], test_prior, set_param!, test_model, test_io, lM, n)
+out_pmmh = adaptive_pmmh([0.0], test_prior, set_param!, test_model, test_io, n)
+out_pg = adaptive_pg([0.0], test_prior, set_param!, test_model, test_io, lM, n)
+out_pg_aswam = adaptive_pg([0.0], test_prior, set_param!, test_model, test_io, lM, n; algorithm=:aswam)

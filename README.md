@@ -45,8 +45,8 @@ N=16; T=10; n=10000
 test_model = AdaptiveParticleMCMC.SMCModel(M!, lG, T, MyParticle, MyParam)
 test_io = AdaptiveParticleMCMC.SMCIO{MyParticle,MyParam}(N, T, 1, true)
 # Run the algorithms
-out_pmmh = pmmh_am([0.0], test_prior, set_param!, test_model, test_io, n)
-out_pg = pg_ram([0.0], test_prior, set_param!, test_model, test_io, lM, n)
+out_pmmh = adaptive_pmmh([0.0], test_prior, set_param!, test_model, test_io, n)
+out_pg = adaptive_pg([0.0], test_prior, set_param!, test_model, test_io, lM, n)
 ```
 
 ## Simple stochastic volatility model
@@ -144,11 +144,11 @@ io = AdaptiveParticleMCMC.SMCIO{SVParticle,SVScratch}(N, T, 1, true)
 # Initial (transformed) parameter vector
 theta0 = LVector(logit_̢rho=0.0, log_sigma=0.0, beta=0.0)
 # Particle marginal Metropolis-Hastings with Adaptive Metropolis
-out_pmmh = pmmh_am(theta0, prior, set_param!, model, io, n;
+out_pmmh = adaptive_pmmh(theta0, prior, set_param!, model, io, n;
 thin=100, show_progress=2, save_paths=true);
 
 # Particle Gibbs with Robust Adaptive Metropolis
-out_pg = pg_ram(theta0, prior, set_param!, model, io, lM_ar1, n;
+out_pg = adaptive_pg(theta0, prior, set_param!, model, io, lM_ar1, n;
 thin=100, show_progress=2, save_paths=true);
 
 # The visualisation requires "StatsPlots" package; install by

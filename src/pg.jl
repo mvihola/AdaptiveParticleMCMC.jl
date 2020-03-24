@@ -11,10 +11,9 @@
 end
 
 """
-   out = pg_ram(theta0, prior, set!, model, io, lM, n; kwargs...)
+   out = adaptive_pg(theta0, prior, set!, model, io, lM, n; kwargs...)
 
-Generic particle marginal Metropolis-Hastings (PMMH) with adaptive
-Metropolis proposal on the parameters.
+Particle Gibbs (PG) with adaptive proposal on the parameters.
 
 # Arguments
 - `theta0`: Initial parameter vector
@@ -31,6 +30,8 @@ Metropolis proposal on the parameters.
 - `save_paths`: Whether to save (samples of) latent trajectories; default `false`
 - `backward_sampling`: Whether to perform backward sampling; default `true`
 - `show_progress`: Show progress every `show_progress` seconds (default: `false`).
+- `algorithm`: The adaptation algorithm; either Robust Adaptive Metropolis
+   `:ram` (default) or Adaptive Scaling within Adaptive Metropolis `:aswam`.
 
 The hidden Markov model is defined in `model`, and the number of
 particles (among other particle filter parameters) in `io`; see
@@ -42,11 +43,11 @@ values (each column is a parameter vector). If requested (by `save_paths=true`),
  `out.X[i][k]` contains the simulated state corresponding to `out.Theta[:,i]`
  at time `k`.
 """
-function pg_ram(theta0::ParamT, prior::Function,
+function adaptive_pg(theta0::ParamT, prior::Function,
     set_param!::Function, model::SMCModel, io::SMCIO, lM::Function, n::Int;
     b::Int=Int(ceil(0.1n)), thin::Int=1, save_paths::Bool=false,
     acc_opt::FT=FT(0.234), backward_sampling::Bool=true,
-    show_progress::Real=false) where {FT <: AbstractFloat, ParamT<:AbstractVector{FT}}
+    show_progress::Real=false, algorithm=:ram) where {FT <: AbstractFloat, ParamT<:AbstractVector{FT}}
 
     ref = [model.particle() for i=1:io.n]
     # Run the particle filter for HMM w/ param theta0:
@@ -57,8 +58,14 @@ function pg_ram(theta0::ParamT, prior::Function,
 
     # Initialise random walk Metropolis state
     r = RWMState(theta0)
-    # Initialise adaptive Metropolis state
-    s = RobustAdaptiveMetropolis(theta0, acc_opt)
+    # Initialise adaptation
+    if algorithm == :ram
+        s = RobustAdaptiveMetropolis(theta0, acc_opt)
+    elseif algorithm == :aswam
+        s = AdaptiveScalingWithinAdaptiveMetropolis(theta0, acc_opt)
+    else
+        error("Unknown algorithm: ", algorithm)
+    end
     # Allocate space for simulated parameters
     nsim = Int(floor((n-b)/thin))
     Theta = zeros(FT, length(theta0), nsim)
@@ -105,5 +112,5 @@ function pg_ram(theta0::ParamT, prior::Function,
         end
         next!(progress)
     end
-    (Theta=Theta, acc=acc/n, X=X, ram=s, theta0=theta0)
+    (Theta=Theta, acc=acc/n, X=X, adapt_state=s, theta0=theta0)
 end

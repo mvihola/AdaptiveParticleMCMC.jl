@@ -34,8 +34,8 @@ test_model = SMCModel(M!, lG, T, TestParticle, TestScratch)
 test_io = SMCIO{TestParticle,TestScratch}(N, T, 1, true)
 update!(theta_) = set_param!(test_parameters, theta_)
 theta0 = zeros(1)
-out_pmmh = pmmh_am(theta0, test_prior, set_param!, test_model, test_io, n; save_paths=true);
-out_pg = pg_ram(theta0, test_prior, set_param!, test_model, test_io, lM, n; save_paths=true);
+out_pmmh = adaptive_pmmh(theta0, test_prior, set_param!, test_model, test_io, n; save_paths=true);
+out_pg = adaptive_pg(theta0, test_prior, set_param!, test_model, test_io, lM, n; save_paths=true);
 function test_stats(out)
     X_ = [out.X[i][j].s for i=1:length(out.X), j=1:T]
     mX = mapslices(mean, X_, dims=1)
