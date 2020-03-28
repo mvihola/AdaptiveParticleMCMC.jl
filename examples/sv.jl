@@ -102,7 +102,7 @@ function quantile_plot!(plt, S, p=0.95; x=1:size(S)[1])
     alpha = (1-p)/2
     qs = [alpha, 0.5, 1-alpha]
     Q = mapslices(x->quantile(x, qs), S, dims=2)
-    plot!(plt, x, Q[:,2], ribbon=[Q[:,2]-Q[:,1], Q[:,3]-Q[:,2]], color=:black,
+    plot!(plt, x, Q[:,2], ribbon=(Q[:,2]-Q[:,1], Q[:,3]-Q[:,2]), color=:black,
     legend=:false, fillalpha=0.2)
 end
 function show_out(out; title="")
