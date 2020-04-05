@@ -83,18 +83,22 @@ function adaptive_pg(theta0::ParamT, prior::Function,
         progress = NullProgress()
     end
     for k = 1:n
-        # Propose parameter update with RAM:
-        ####################################
-        p = prior(r.x) + _reference_logLik(ref, model.lG, lM, io.internal.particleScratch)
-        draw!(r, s)
-        set_param!(io.internal.particleScratch, r.y)
-        p_ = prior(r.y) + _reference_logLik(ref, model.lG, lM, io.internal.particleScratch)
-        alpha = min(one(FT), exp(p_ - p))
-        if rand() <= alpha
-            accept!(r)
-            acc += 1
-        else
-            set_param!(io.internal.particleScratch, r.x)
+        # Propose parameter update:
+        ###########################
+        draw!(r, s); pr_ = prior(r.y)
+        if pr_ > -Inf
+            p = prior(r.x) + _reference_logLik(ref, model.lG, lM, io.internal.particleScratch)
+            set_param!(io.internal.particleScratch, r.y)
+            p_ = pr_ + _reference_logLik(ref, model.lG, lM, io.internal.particleScratch)
+            alpha = min(one(FT), exp(p_ - p))
+            if rand() <= alpha
+                accept!(r)
+                acc += 1
+            else
+                set_param!(io.internal.particleScratch, r.x)
+            end
+        else # Early rejection if prior fails:
+            alpha = zero(FT)
         end
         adapt!(s, r, alpha, k)
 

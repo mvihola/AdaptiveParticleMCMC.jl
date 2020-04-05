@@ -60,15 +60,19 @@ function adaptive_pmmh(theta0::ParamT, prior::Function, state::SMCState, n::Int;
     end
     for k = 1:n
         # PMMH: Draw proposal for parameter, run SMC:
-        draw!(r, s)
-        set_param!(io.internal.particleScratch, r.y); smc!(model, io)
-        p_ = io.logZhats[end] + prior(r.y)
-        alpha = min(one(FT), exp(p_ - p))
-        if rand() <= alpha
-            accept!(r)
-            p = p_
-            acc += 1
-            SequentialMonteCarlo.pickParticle!(ref, io)
+        draw!(r, s); pr_ = prior(r.y)
+        if pr_ > -Inf
+            set_param!(io.internal.particleScratch, r.y); smc!(model, io)
+            p_ = io.logZhats[end] + pr_
+            alpha = min(one(FT), exp(p_ - p))
+            if rand() <= alpha
+                accept!(r)
+                p = p_
+                acc += 1
+                SequentialMonteCarlo.pickParticle!(ref, io)
+            end
+        else
+            alpha = 0.0
         end
         adapt!(s, r, alpha, k)
 
