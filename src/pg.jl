@@ -91,7 +91,7 @@ function adaptive_pg(theta0::ParamT, prior::Function,
             set_param!(io.internal.particleScratch, r.y)
             p_ = pr_ + _reference_logLik(ref, model.lG, lM, io.internal.particleScratch)
             #alpha = min(one(FT), exp(p_ - p))
-            rxy = exp(p_ - p); alpha = (rxy<one(FT)) ? rxy : one(FT) # This makes r=NaN -> alpha=1
+            alpha = _accept_prob(p, p_, FT)
             if rand() <= alpha
                 accept!(r)
                 acc += 1

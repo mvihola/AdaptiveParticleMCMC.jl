@@ -44,3 +44,15 @@ function SMCState(T::Int, N::Int, ParticleType, ScratchType,
     io = SMCIO{ParticleType,ScratchType}(N, T, nthreads, true, essThreshold)
     SMCState(model, io, lM, set_param!)
 end
+
+# Function which is essentially min(1, exp(p_ - p)),  but handles
+# exceptional cases gracefully
+@inline function _accept_prob(p, p_, FT)
+    if !isfinite(p_) # p_ is not finite => force reject
+        return zero(FT)
+    elseif !isfinite(p) # p_ is finite but p not => force accept
+        return one(FT)
+    else # both finite, the standard case:
+        return (p_ >= p) ? one(FT) : exp(p_ - p)
+    end
+end

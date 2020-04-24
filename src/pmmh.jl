@@ -65,7 +65,7 @@ function adaptive_pmmh(theta0::ParamT, prior::Function, state::SMCState, n::Int;
             set_param!(io.internal.particleScratch, r.y); smc!(model, io)
             p_ = io.logZhats[end] + pr_
             #alpha = min(one(FT), exp(p_ - p))
-            rxy = exp(p_ - p); alpha = (rxy<one(FT)) ? rxy : one(FT) # This makes r=NaN -> alpha=1
+            alpha = _accept_prob(p, p_, FT)
             if rand() <= alpha
                 accept!(r)
                 p = p_
