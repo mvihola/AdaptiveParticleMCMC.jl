@@ -16,9 +16,7 @@ Metropolis proposal on the parameters.
 - `save_paths`: Whether to save (samples of) latent trajectories; default `false`
 - `show_progress`: Show progress every `show_progress` seconds (default: `false`).
 
-The hidden Markov model is defined in `model`, and the number of
-particles (among other particle filter parameters) in `io`; see
-the documentation of `SequentialMonteCarlo.jl`
+The hidden Markov model and SMC state is defined in `state`; see `?SMCState`.
 
 The output `out` is a `NamedTuple` containing the simulation output: `out.acc`
 is the mean acceptance rate, `out.Theta` contains the simulated parameter
@@ -26,16 +24,15 @@ values (each column is a parameter vector). If requested (by `save_paths=true`),
 `out.X[i][k]` contains the simulated state corresponding to `out.Theta[:,i]`
 at time `k`.
 """
-function adaptive_pmmh(theta0::ParamT, prior::Function, state::SMCState, n::Int;
+function adaptive_pmmh(theta0::ParamT, prior::Function, state, n::Int;
     b::Int=Int(ceil(0.1n)), thin::Int=1, save_paths::Bool=false,
     show_progress::Real=false) where {FT<:AbstractFloat, ParamT<:AbstractVector{FT}}
 
-    io = state.io; model = state.model; set_param! = state.set_param!
-
     # Run the particle filter for HMM w/ param theta0:
-    set_param!(io.internal.particleScratch, theta0); smc!(model, io)
+    _set_model_param!(state, theta0)
+    _run_smc!(state)
     # The initial log-target density:
-    p = io.logZhats[end] + prior(theta0)
+    p = _log_likelihood(state) + prior(theta0)
 
     # Initialise random walk Metropolis state
     r = RWMState(theta0)
@@ -46,10 +43,9 @@ function adaptive_pmmh(theta0::ParamT, prior::Function, state::SMCState, n::Int;
     Theta = zeros(FT, length(theta0), nsim)
     D = zeros(nsim)
     acc = zero(FT)
-    ref = [model.particle() for i=1:io.n]
-    SequentialMonteCarlo.pickParticle!(ref, io)
     if save_paths
-        X = [[model.particle() for i=1:io.n] for j=1:nsim]
+        _pick_particle!(state)
+        X = _init_path_storage(state, nsim)
     else
         X = Missing
     end
@@ -62,15 +58,16 @@ function adaptive_pmmh(theta0::ParamT, prior::Function, state::SMCState, n::Int;
         # PMMH: Draw proposal for parameter, run SMC:
         draw!(r, s); pr_ = prior(r.y)
         if pr_ > -Inf
-            set_param!(io.internal.particleScratch, r.y); smc!(model, io)
-            p_ = io.logZhats[end] + pr_
+            _set_model_param!(state, r.y)
+            _run_smc!(state)
+            p_ = _log_likelihood(state) + pr_
             #alpha = min(one(FT), exp(p_ - p))
             alpha = _accept_prob(p, p_, FT)
             if rand() <= alpha
                 accept!(r)
                 p = p_
                 acc += 1
-                SequentialMonteCarlo.pickParticle!(ref, io)
+                save_paths && _pick_particle!(state)
             end
         else
             alpha = 0.0
@@ -83,7 +80,7 @@ function adaptive_pmmh(theta0::ParamT, prior::Function, state::SMCState, n::Int;
             Theta[:,i] = r.x
             D[i] = p
             if save_paths
-                SequentialMonteCarlo._copyParticles!(X[i], ref)
+                _copy_particles!(X[i], state)
             end
         end
         next!(progress)
