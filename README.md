@@ -168,7 +168,7 @@ function show_out(out; title="")
     p_theta = corrplot(out.Theta', size=(600,600), label=labels,
     title="Parameter posterior$title")
     # The volatilities:
-    S = [out.X[j][i].s+out.Theta[3,j] for i=1:length(out.X), j=1:length(out.X)]
+    S = [out.X[j][i].s+out.Theta[3,j] for i=1:length(out.X[1]), j=1:length(out.X)]
     p_paths = plot(xlabel="Time", size=(600,800), ylabel="Log-volatility",
     legend=false, title="Latent posterior median, 50% and 95% credible intervals")
     quantile_plot!(p_paths, S, 0.95; x=data.Date[2:end])
