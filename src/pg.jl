@@ -97,6 +97,7 @@ function adaptive_pg(theta0::ParamT, prior::Function, state, n::Int;
             i = Int((k-b)/thin)
             Theta[:,i] = r.x
             if save_paths
+                _save_reference!(state)
                 _copy_reference!(X[i], state)
             end
         end

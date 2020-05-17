@@ -67,7 +67,10 @@ function adaptive_pmmh(theta0::ParamT, prior::Function, state, n::Int;
                 accept!(r)
                 p = p_
                 acc += 1
-                save_paths && _pick_particle!(state)
+                if save_paths
+                    _pick_particle!(state)
+                    _save_reference!(state)
+                end
             end
         else
             alpha = 0.0

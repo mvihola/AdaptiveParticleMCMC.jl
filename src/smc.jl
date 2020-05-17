@@ -70,6 +70,7 @@ end
 @inline function _pick_particle!(state::SMCState)
     SequentialMonteCarlo.pickParticle!(state.ref, state.io)
 end
+@inline _save_reference!(state::SMCState) = nothing
 @inline function _init_path_storage(state::SMCState, nsim)
     [[state.model.particle() for i=1:state.io.n] for j=1:nsim]
 end
