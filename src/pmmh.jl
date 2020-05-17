@@ -80,7 +80,7 @@ function adaptive_pmmh(theta0::ParamT, prior::Function, state, n::Int;
             Theta[:,i] = r.x
             D[i] = p
             if save_paths
-                _copy_particles!(X[i], state)
+                _copy_reference!(X[i], state)
             end
         end
         next!(progress)

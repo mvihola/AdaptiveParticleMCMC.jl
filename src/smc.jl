@@ -8,7 +8,8 @@ struct SMCState{ioT<:SMCIO, modelT<:SMCModel,
 end
 
 """
-   state = SMCState(T, N, ParticleType, ScratchType, lG, M!, [lM=nothing]; kwargs...)
+   state = SMCState(T, N, ParticleType, ScratchType, set_param!, lG, M!,
+                    [lM=nothing]; kwargs...)
 
 Data structures for Sequential Monte Carlo.
 
@@ -72,7 +73,7 @@ end
 @inline function _init_path_storage(state::SMCState, nsim)
     [[state.model.particle() for i=1:state.io.n] for j=1:nsim]
 end
-@inline function _copy_particles!(out, state::SMCState)
+@inline function _copy_reference!(out, state::SMCState)
     SequentialMonteCarlo._copyParticles!(out, state.ref)
 end
 @inline function _run_csmc!(state::SMCState)
