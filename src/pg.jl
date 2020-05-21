@@ -88,10 +88,7 @@ function adaptive_pg(theta0::ParamT, prior::Function, state, n::Int;
 
         # State update with CPF (& optional backward sampling)
         ############################
-        _run_csmc!(state)
-        if backward_sampling
-            _pick_particle_bs!(state)
-        end
+        _run_csmc!(state, backward_sampling)
 
         @inbounds if k>b && rem(k-b, thin)==0
             i = Int((k-b)/thin)

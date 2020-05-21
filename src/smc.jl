@@ -77,9 +77,10 @@ end
 @inline function _copy_reference!(out, state::SMCState)
     SequentialMonteCarlo._copyParticles!(out, state.ref)
 end
-@inline function _run_csmc!(state::SMCState)
+@inline function _run_csmc!(state::SMCState, backward_sampling::Bool)
     csmc!(state.model, state.io, state.ref, state.ref)
-end
-@inline function _pick_particle_bs!(state::SMCState)
-    SequentialMonteCarlo.pickParticleBS!(state.ref, state.io, state.lM)
+    if backward_sampling
+        SequentialMonteCarlo.pickParticleBS!(state.ref, state.io, state.lM)
+    end
+    nothing
 end
