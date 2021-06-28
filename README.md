@@ -20,7 +20,8 @@ If you use this package in your work, please cite the publication above.
 
 ```julia
 using Pkg
-Pkg.add(PackageSpec(url="https://github.com/mvihola/AdaptiveParticleMCMC.jl.git"))
+Pkg.add(url="https://github.com/awllee/SequentialMonteCarlo.jl")
+Pkg.add(url="https://github.com/mvihola/AdaptiveParticleMCMC.jl")
 ```
 
 ## Quick start
