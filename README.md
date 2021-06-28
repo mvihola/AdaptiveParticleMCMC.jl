@@ -58,8 +58,8 @@ out_pg = adaptive_pg([0.0], test_prior, state, n)
 ```julia
 # This example requires that also the packages Distributions, LabelledArrays,
 # and CSV are installed; install by
-# using Pkg; Pkg.add("Statistics"); Pkg.add("CSV"); Pkg.add("Distributions"); Pkg.add("LabelledArrays")
-using AdaptiveParticleMCMC, Statistics, LabelledArrays, Distributions, CSV
+# using Pkg; Pkg.add("Statistics"); Pkg.add("CSV"); Pkg.add("Distributions"); Pkg.add("LabelledArrays"); Pkg.add("DataFrames")
+using AdaptiveParticleMCMC, Statistics, LabelledArrays, Distributions, CSV, DataFrames
 
 # Define the particle type for the model (here, latent is univariate AR(1))
 mutable struct SVParticle
@@ -76,7 +76,7 @@ mutable struct SVParam
 end
 
 # Monthly S&P 500 data (from https://datahub.io/core/s-and-p-500):
-data = CSV.read(download("https://raw.githubusercontent.com/mvihola/AdaptiveParticleMCMC.jl/master/examples/sp500post2000.csv"))
+data = CSV.read(download("https://raw.githubusercontent.com/mvihola/AdaptiveParticleMCMC.jl/master/examples/sp500post2000.csv"), DataFrame)
 sp500_data = diff(log.(data.SP500)) # Monthly log-returns
 sp500_data .-= mean(sp500_data)     # Remove trend
 # Initialise parameters
