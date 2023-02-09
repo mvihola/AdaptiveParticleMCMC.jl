@@ -54,7 +54,6 @@ function adaptive_pg(theta0::ParamT, prior::Function, state, n::Int;
     # Allocate space for simulated parameters
     nsim = Int(floor((n-b)/thin))
     Theta = zeros(FT, length(theta0), nsim)
-    acc = zero(FT)
     if save_paths
         X = _init_path_storage(state, nsim)
     else
@@ -65,6 +64,13 @@ function adaptive_pg(theta0::ParamT, prior::Function, state, n::Int;
     else
         progress = NullProgress()
     end
+    acc = adaptive_pg_!(Theta, X, r, s, state, backward_sampling, n, b, thin, save_paths, progress, prior)
+    (Theta=Theta, acc=acc/n, X=X, adapt_state=s, theta0=theta0)
+end
+
+# Worker:
+function adaptive_pg_!(Theta, X, r, s, state, backward_sampling, n, b, thin, save_paths, progress, prior::Function)
+    acc = 0
     for k = 1:n
         # Propose parameter update:
         ###########################
@@ -74,7 +80,7 @@ function adaptive_pg(theta0::ParamT, prior::Function, state, n::Int;
             _set_model_param!(state, r.y)
             p_ = pr_ + _reference_log_likelihood(state)
             #alpha = min(one(FT), exp(p_ - p))
-            alpha = _accept_prob(p, p_, FT)
+            alpha = _accept_prob(p, p_)
             if rand() <= alpha
                 accept!(r)
                 acc += 1
@@ -82,7 +88,7 @@ function adaptive_pg(theta0::ParamT, prior::Function, state, n::Int;
                 _set_model_param!(state, r.x)
             end
         else # Early rejection if prior fails:
-            alpha = zero(FT)
+            alpha = zero(pr_)
         end
         adapt!(s, r, alpha, k)
 
@@ -100,5 +106,5 @@ function adaptive_pg(theta0::ParamT, prior::Function, state, n::Int;
         end
         next!(progress)
     end
-    (Theta=Theta, acc=acc/n, X=X, adapt_state=s, theta0=theta0)
+    return acc
 end

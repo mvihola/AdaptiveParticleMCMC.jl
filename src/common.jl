@@ -8,12 +8,12 @@ next!(::NullProgress) = nothing
 
 # Function which is essentially min(1, exp(p_ - p)),  but handles
 # exceptional cases gracefully
-@inline function _accept_prob(p, p_, FT)
+@inline function _accept_prob(p, p_)
     if !isfinite(p_) # p_ is not finite => force reject
-        return zero(FT)
+        return zero(p)
     elseif !isfinite(p) # p_ is finite but p not => force accept
-        return one(FT)
+        return one(p)
     else # both finite, the standard case:
-        return (p_ >= p) ? one(FT) : exp(p_ - p)
+        return (p_ >= p) ? one(p) : exp(p_ - p)
     end
 end

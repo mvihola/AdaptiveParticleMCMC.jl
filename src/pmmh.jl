@@ -31,8 +31,6 @@ function adaptive_pmmh(theta0::ParamT, prior::Function, state, n::Int;
     # Run the particle filter for HMM w/ param theta0:
     _set_model_param!(state, theta0)
     _run_smc!(state)
-    # The initial log-target density:
-    p = _log_likelihood(state) + prior(theta0)
 
     # Initialise random walk Metropolis state
     r = RWMState(theta0)
@@ -42,7 +40,6 @@ function adaptive_pmmh(theta0::ParamT, prior::Function, state, n::Int;
     nsim = Int(floor((n-b)/thin))
     Theta = zeros(FT, length(theta0), nsim)
     D = zeros(nsim)
-    acc = zero(FT)
     if save_paths
         _pick_particle!(state)
         X = _init_path_storage(state, nsim)
@@ -54,6 +51,14 @@ function adaptive_pmmh(theta0::ParamT, prior::Function, state, n::Int;
     else
         progress = NullProgress()
     end
+    acc = adaptive_pmmh_!(Theta, X, D, r, s, state, n, b, thin, save_paths, progress, prior)
+    (Theta=Theta, D=D, acc=acc/n, X=X, am=s, theta0=theta0)
+end
+
+function adaptive_pmmh_!(Theta, X, D, r, s, state, n, b, thin, save_paths, progress, prior::Function)
+    acc = 0
+    # The initial log-target density:
+    p = _log_likelihood(state) + prior(r.x)
     for k = 1:n
         # PMMH: Draw proposal for parameter, run SMC:
         draw!(r, s); pr_ = prior(r.y)
@@ -62,7 +67,7 @@ function adaptive_pmmh(theta0::ParamT, prior::Function, state, n::Int;
             _run_smc!(state)
             p_ = _log_likelihood(state) + pr_
             #alpha = min(one(FT), exp(p_ - p))
-            alpha = _accept_prob(p, p_, FT)
+            alpha = _accept_prob(p, p_)
             if rand() <= alpha
                 accept!(r)
                 p = p_
@@ -88,5 +93,5 @@ function adaptive_pmmh(theta0::ParamT, prior::Function, state, n::Int;
         end
         next!(progress)
     end
-    (Theta=Theta, D=D, acc=acc/n, X=X, am=s, theta0=theta0)
+    return acc
 end
