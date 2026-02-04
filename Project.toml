@@ -1,7 +1,7 @@
 name = "AdaptiveParticleMCMC"
 uuid = "80dd4f21-a330-47dc-9fe5-4758e06b94f1"
 authors = ["Matti Vihola <mvihola@iki.fi>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 AdaptiveMCMC = "717c3277-546c-407d-8270-09a39a0919a0"
