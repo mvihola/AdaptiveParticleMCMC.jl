@@ -91,6 +91,10 @@ function adaptive_pmmh_!(Theta, X, D, r, s, state, n, b, thin, save_paths, progr
                 _copy_reference!(X[i], state)
             end
         end
+
+        # Custom action after each iteration
+        _post_iteration_hook!(state, k)
+
         next!(progress)
     end
     return acc

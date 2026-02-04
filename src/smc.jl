@@ -43,7 +43,7 @@ function SMCState(T::Int, N::Int, ParticleType, ScratchType,
     SMCState(model, io, lM, set_param!, ref)
 end
 
-# Helper which calculates model log-likelihood for given reference
+# Helper which calculates model log-likelihood of the reference path
 @inline function _reference_log_likelihood(state::SMCState)
     ref = state.ref; lG = state.model.lG; lM = state.lM;
     pScratch = state.io.internal.particleScratch
@@ -56,27 +56,43 @@ end
     L
 end
 
-# Wrappers to SequentialMonteCarlo interface
+# Wrappers to SequentialMonteCarlo interface:
+
+# Change model parameters to correspond theta
 @inline function _set_model_param!(state::SMCState, theta)
     state.set_param!(state.io.internal.particleScratch, theta)
     nothing
 end
+
+# Run one sweep of SMC
 @inline function _run_smc!(state::SMCState)
     smc!(state.model, state.io)
 end
+
+# Model log-likelihood estimate with current parameters
 @inline function _log_likelihood(state::SMCState)
     state.io.logZhats[end]
 end
+
+# Pick one path from SMC using ancestor tracing
 @inline function _pick_particle!(state::SMCState)
     SequentialMonteCarlo.pickParticle!(state.ref, state.io)
 end
+
+# Save reference state
 @inline _save_reference!(state::SMCState) = nothing
+
+# Initialise storage for paths
 @inline function _init_path_storage(state::SMCState, nsim)
     [[state.model.particle() for i=1:state.io.n] for j=1:nsim]
 end
+
+# In-place copy reference path to output
 @inline function _copy_reference!(out, state::SMCState)
     SequentialMonteCarlo._copyParticles!(out, state.ref)
 end
+
+# Run one iteration of conditional SMC with ancestor tracing or backward sampling
 @inline function _run_csmc!(state::SMCState, backward_sampling::Bool)
     csmc!(state.model, state.io, state.ref, state.ref)
     if backward_sampling
@@ -84,3 +100,6 @@ end
     end
     nothing
 end
+
+# Custom action after each iteration
+_post_iteration_hook!(state::SMCState, iteration) = nothing

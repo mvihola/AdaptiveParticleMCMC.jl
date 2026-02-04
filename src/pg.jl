@@ -104,6 +104,10 @@ function adaptive_pg_!(Theta, X, r, s, state, backward_sampling, n, b, thin, sav
                 _copy_reference!(X[i], state)
             end
         end
+
+        # Custom action after each iteration
+        _post_iteration_hook!(state, k)
+
         next!(progress)
     end
     return acc
