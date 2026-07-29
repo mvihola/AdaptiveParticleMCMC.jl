@@ -20,14 +20,15 @@ If you use this package in your work, please cite the publication above.
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/awllee/SequentialMonteCarlo.jl")
+Pkg.add(url="https://github.com/mvihola/RNGPool.jl")
+Pkg.add(url="https://github.com/mvihola/SequentialMonteCarlo.jl")
 Pkg.add(url="https://github.com/mvihola/AdaptiveParticleMCMC.jl")
 ```
 
 ## Quick start
 
 ```julia
-using AdaptiveParticleMCMC
+using AdaptiveParticleMCMC, SequentialMonteCarlo
 # 'Particle' and 'ParticleScratch' data types for SequentialMonteCarlo0
 mutable struct MyParticle
     s::Float64
@@ -56,10 +57,11 @@ out_pg = adaptive_pg([0.0], test_prior, state, n)
 ## Simple stochastic volatility model
 
 ```julia
-# This example requires that also the packages Distributions, LabelledArrays,
+# This example requires that also the packages Distributions, ComponentArrays,
 # and CSV are installed; install by
-# using Pkg; Pkg.add("Statistics"); Pkg.add("CSV"); Pkg.add("Distributions"); Pkg.add("LabelledArrays"); Pkg.add("DataFrames")
-using AdaptiveParticleMCMC, Statistics, LabelledArrays, Distributions, CSV, DataFrames
+# using Pkg; Pkg.add("Statistics"); Pkg.add("CSV"); Pkg.add("Distributions"); Pkg.add("ComponentArrays"); Pkg.add("DataFrames")
+using AdaptiveParticleMCMC, SequentialMonteCarlo
+using Statistics, ComponentArrays, Distributions, CSV, DataFrames
 
 # Define the particle type for the model (here, latent is univariate AR(1))
 mutable struct SVParticle
@@ -145,7 +147,7 @@ n = 40_000 # Number of PMCMC iterations
 state = SMCState(T, N, SVParticle, SVScratch, set_param!, lG_sv, M_ar1!, lM_ar1)
 
 # Initial (transformed) parameter vector
-theta0 = LVector(logit_̢rho=0.0, log_sigma=0.0, beta=0.0)
+theta0 = ComponentVector(logit_̢rho=0.0, log_sigma=0.0, beta=0.0)
 # Particle marginal Metropolis-Hastings with Adaptive Metropolis
 out_pmmh = adaptive_pmmh(theta0, prior, state, n;
   thin=100, show_progress=2, save_paths=true);

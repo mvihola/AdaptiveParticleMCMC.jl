@@ -3,10 +3,10 @@ module AdaptiveParticleMCMC
 
 export adaptive_pg, adaptive_pmmh, SMCState
 
-using Random, SequentialMonteCarlo, ProgressMeter, AdaptiveMCMC
+using Random, ProgressMeter, AdaptiveMCMC
 
 include("common.jl") # Data types
-include("smc.jl") # SequentialMonteCarlo.jl interface
+include("smc_interface.jl") # Null interface to SMC backend
 include("pmmh.jl") # Particle marginal Metropolis-Hastings
 include("pg.jl")   # Particle Gibbs
 

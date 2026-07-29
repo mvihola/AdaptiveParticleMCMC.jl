@@ -1,4 +1,15 @@
-struct SMCState{ioT<:SMCIO, modelT<:SMCModel,
+module AdaptiveParticleMCMCSequentialMonteCarloExt
+
+using SequentialMonteCarlo
+
+# The functions to be defined:
+import AdaptiveParticleMCMC: _run_smc!, _run_csmc!, 
+_log_likelihood, _pick_particle!, _init_path_storage, 
+_copy_reference!, _save_reference!, _reference_log_likelihood, 
+_post_iteration_hook!, _set_model_param!, SMCState
+
+# Wrapper state
+struct _SMCState{ioT<:SMCIO, modelT<:SMCModel,
     lMT<:Union{Function,Nothing}, setT<:Function, refT}
     model::modelT
     io::ioT
@@ -40,11 +51,11 @@ function SMCState(T::Int, N::Int, ParticleType, ScratchType,
     model = SMCModel(M!, lG, T, ParticleType, ScratchType)
     io = SMCIO{ParticleType,ScratchType}(N, T, nthreads, true, essThreshold)
     ref = [model.particle() for i=1:T]
-    SMCState(model, io, lM, set_param!, ref)
+    _SMCState(model, io, lM, set_param!, ref)
 end
 
 # Helper which calculates model log-likelihood of the reference path
-@inline function _reference_log_likelihood(state::SMCState)
+@inline function _reference_log_likelihood(state::_SMCState)
     ref = state.ref; lG = state.model.lG; lM = state.lM;
     pScratch = state.io.internal.particleScratch
     L = 0.0
@@ -56,44 +67,42 @@ end
     L
 end
 
-# Wrappers to SequentialMonteCarlo interface:
-
 # Change model parameters to correspond theta
-@inline function _set_model_param!(state::SMCState, theta)
+@inline function _set_model_param!(state::_SMCState, theta)
     state.set_param!(state.io.internal.particleScratch, theta)
     nothing
 end
 
 # Run one sweep of SMC
-@inline function _run_smc!(state::SMCState)
+@inline function _run_smc!(state::_SMCState)
     smc!(state.model, state.io)
 end
 
 # Model log-likelihood estimate with current parameters
-@inline function _log_likelihood(state::SMCState)
+@inline function _log_likelihood(state::_SMCState)
     state.io.logZhats[end]
 end
 
 # Pick one path from SMC using ancestor tracing
-@inline function _pick_particle!(state::SMCState)
+@inline function _pick_particle!(state::_SMCState)
     SequentialMonteCarlo.pickParticle!(state.ref, state.io)
 end
 
 # Save reference state
-@inline _save_reference!(state::SMCState) = nothing
+@inline _save_reference!(state::_SMCState) = nothing
 
 # Initialise storage for paths
-@inline function _init_path_storage(state::SMCState, nsim)
+@inline function _init_path_storage(state::_SMCState, nsim)
     [[state.model.particle() for i=1:state.io.n] for j=1:nsim]
 end
 
 # In-place copy reference path to output
-@inline function _copy_reference!(out, state::SMCState)
+@inline function _copy_reference!(out, state::_SMCState)
     SequentialMonteCarlo._copyParticles!(out, state.ref)
 end
 
 # Run one iteration of conditional SMC with ancestor tracing or backward sampling
-@inline function _run_csmc!(state::SMCState, backward_sampling::Bool)
+@inline function _run_csmc!(state::_SMCState, backward_sampling::Bool)
     csmc!(state.model, state.io, state.ref, state.ref)
     if backward_sampling
         SequentialMonteCarlo.pickParticleBS!(state.ref, state.io, state.lM)
@@ -102,4 +111,6 @@ end
 end
 
 # Custom action after each iteration
-_post_iteration_hook!(state::SMCState, iteration) = nothing
+_post_iteration_hook!(state::_SMCState, iteration) = nothing
+
+end
