@@ -17,6 +17,8 @@ Particle Gibbs (PG) with adaptive proposal on the parameters.
 - `show_progress`: Show progress every `show_progress` seconds (default: `false`).
 - `algorithm`: The adaptation algorithm; either Robust Adaptive Metropolis
    `:ram` (default) or Adaptive Scaling within Adaptive Metropolis `:aswam`.
+- `theta_steps`: Do this many parameter updates in between CSMC updates.
+  (default: 1)
 
 The hidden Markov model and SMC state is defined in `state`; see `?SMCState`.
 
@@ -29,7 +31,8 @@ values (each column is a parameter vector). If requested (by `save_paths=true`),
 function adaptive_pg(theta0::ParamT, prior::Function, state, n::Int;
     b::Int=Int(ceil(0.1n)), thin::Int=1,
     save_paths::Bool=false, acc_opt::FT=FT(0.234), backward_sampling::Bool=true,
-    show_progress::Real=false, algorithm=:ram) where {FT <: AbstractFloat, ParamT<:AbstractVector{FT}}
+    show_progress::Real=false, algorithm=:ram,
+    theta_steps::Int=1) where {FT <: AbstractFloat, ParamT<:AbstractVector{FT}}
 
     if isnothing(state.lM)
         error("SMC state `state` must supply log-transition density!")
@@ -64,33 +67,35 @@ function adaptive_pg(theta0::ParamT, prior::Function, state, n::Int;
     else
         progress = NullProgress()
     end
-    acc = adaptive_pg_!(Theta, X, r, s, state, backward_sampling, n, b, thin, save_paths, progress, prior)
-    (Theta=Theta, acc=acc/n, X=X, adapt_state=s, theta0=theta0)
+    acc = adaptive_pg_!(Theta, X, r, s, state, backward_sampling, n, b, thin, save_paths, progress, prior, theta_steps)
+    (Theta=Theta, acc=acc/(n*theta_steps), X=X, adapt_state=s, theta0=theta0)
 end
 
 # Worker:
-function adaptive_pg_!(Theta, X, r, s, state, backward_sampling, n, b, thin, save_paths, progress, prior::Function)
+function adaptive_pg_!(Theta, X, r, s, state, backward_sampling, n, b, thin, save_paths, progress, prior::Function, theta_steps)
     acc = 0
     for k = 1:n
-        # Propose parameter update:
-        ###########################
-        draw!(r, s); pr_ = prior(r.y)
-        if pr_ > -Inf
-            p = prior(r.x) + _reference_log_likelihood(state)
-            _set_model_param!(state, r.y)
-            p_ = pr_ + _reference_log_likelihood(state)
-            #alpha = min(one(FT), exp(p_ - p))
-            alpha = _accept_prob(p, p_)
-            if rand() <= alpha
-                accept!(r)
-                acc += 1
-            else
-                _set_model_param!(state, r.x)
+        for j = 1:theta_steps
+            # Propose parameter update:
+            ###########################
+            draw!(r, s); pr_ = prior(r.y)
+            if pr_ > -Inf
+                p = prior(r.x) + _reference_log_likelihood(state)
+                _set_model_param!(state, r.y)
+                p_ = pr_ + _reference_log_likelihood(state)
+                #alpha = min(one(FT), exp(p_ - p))
+                alpha = _accept_prob(p, p_)
+                if rand() <= alpha
+                    accept!(r)
+                    acc += 1
+                else
+                    _set_model_param!(state, r.x)
+                end
+            else # Early rejection if prior fails:
+                alpha = zero(pr_)
             end
-        else # Early rejection if prior fails:
-            alpha = zero(pr_)
+            adapt!(s, r, alpha, (k-1)*theta_steps + j)
         end
-        adapt!(s, r, alpha, k)
 
         # State update with CPF (& optional backward sampling)
         ############################
